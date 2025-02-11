@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { getContracts, createContract } from "../../api/contractApi";
 import ContractList from "./ContractList";
 import ContractForm from "./ContractForm";
 import LoadingSpinner from "../common/LoadingSpinner";
@@ -11,33 +11,40 @@ const ContractsPage = () => {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        axios.get("/api/contracts")
-            .then(response => {
-                setContracts(response.data);
+        const fetchContracts = async () => {
+            try {
+                const contracts = await getContracts();
+                setContracts(contracts);
                 setLoading(false);
-            })
-            .catch(error => {
+            } catch (error) {
+                console.error("Error fetching contracts:", error);
                 setError("Failed to load contracts. Please try again.");
                 setLoading(false);
-            });
+            }
+        };
+
+        fetchContracts();
     }, []);
 
-    const handleContractAdded = (newContract) => {
-        setContracts([...contracts, newContract]);
+    const handleContractAdded = async (newContractData) => {
+        try {
+            const newContract = await createContract(newContractData);
+            setContracts([...contracts, newContract]);
+        } catch (error) {
+            console.error("Error adding contract:", error);
+            setError("Failed to add contract. Please try again.");
+        }
     };
-
-    const handleContractDeleted = (contractId) => {
-        setContracts(contracts.filter(contract => contract.id !== contractId));
-    };
-
-    if (loading) return <LoadingSpinner />;
-    if (error) return <ErrorMessage message={error} />;
 
     return (
         <div className="container mt-4">
             <h2>Contracts</h2>
+
+            {loading && <LoadingSpinner />}
+            {error && <ErrorMessage message={error} />}
+            
             <ContractForm onContractAdded={handleContractAdded} />
-            <ContractList contracts={contracts} onContractDeleted={handleContractDeleted} />
+            <ContractList contracts={contracts} />
         </div>
     );
 };

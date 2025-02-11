@@ -2,54 +2,99 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\Contract;
 use App\Models\Client;
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\ValidationException;
+use Exception;
+use Illuminate\Support\Facades\Log;
 
 class ContractController extends Controller
 {
-    public function index()
+    /**
+     * Display a listing of the contracts.
+     */
+    public function index(): JsonResponse
     {
         $contracts = Contract::with('client')->get();
         return response()->json($contracts);
     }
 
-    public function store(Request $request)
+    /**
+     * Store a newly created contract in storage.
+     */
+    public function store(Request $request): JsonResponse
     {
-        $request->validate([
-            'contract_name' => 'required|string|max:255',
-            'client_id' => 'required|exists:clients,id',
-            'start_date' => 'required|date',
-            'duration' => 'required|integer',
-            'comment' => 'nullable|string',
-        ]);
+        try {
+            $validatedData = $request->validate([
+                'contract_name' => 'required|string|max:255',
+                'client_id' => 'required|exists:clients,id',
+                'start_date' => 'required|date',
+                'duration' => 'required|integer|min:1',
+                'comments' => 'nullable|string|max:500',
+            ]);
 
-        $contract = Contract::create($request->all());
-        return response()->json(['success' => 'Contract created successfully.', 'contract' => $contract], 201);
+            $contract = Contract::create($validatedData);
+
+            return response()->json($contract, 201);
+        } catch (ValidationException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
     }
 
-    public function show(Contract $contract)
+    /**
+     * Display the specified contract.
+     */
+    public function show($id): JsonResponse
     {
+        $contract = Contract::with('client')->find($id);
+        
+        if (!$contract) {
+            return response()->json(['error' => 'Contract not found'], 404);
+        }
+
         return response()->json($contract);
     }
 
-    public function update(Request $request, Contract $contract)
+    /**
+     * Update the specified contract in storage.
+     */
+    public function update(Request $request, $id): JsonResponse
     {
-        $request->validate([
-            'contract_name' => 'sometimes|required|string|max:255',
-            'client_id' => 'sometimes|required|exists:clients,id',
-            'start_date' => 'sometimes|required|date',
-            'duration' => 'sometimes|required|integer',
-            'comment' => 'nullable|string',
-        ]);
+        try {
+            $validatedData = $request->validate([
+                'name' => 'sometimes|string|max:255',
+                'client_id' => 'sometimes|exists:clients,id',
+                'start_date' => 'sometimes|date',
+                'duration' => 'sometimes|integer|min:1',
+                'comment' => 'nullable|string|max:500',
+            ]);
 
-        $contract->update($request->all());
-        return response()->json(['success' => 'Contract updated successfully.', 'contract' => $contract]);
+            $contract = Contract::find($id);
+            if (!$contract) {
+                return response()->json(['error' => 'Contract not found'], 404);
+            }
+
+            $contract->update($validatedData);
+
+            return response()->json($contract);
+        } catch (ValidationException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
     }
 
-    public function destroy(Contract $contract)
+    /**
+     * Remove the specified contract from storage.
+     */
+    public function destroy($id): JsonResponse
     {
+        $contract = Contract::find($id);
+        if (!$contract) {
+            return response()->json(['error' => 'Contract not found'], 404);
+        }
+
         $contract->delete();
-        return response()->json(['success' => 'Contract deleted successfully.']);
+        return response()->json(['message' => 'Contract deleted successfully']);
     }
 }

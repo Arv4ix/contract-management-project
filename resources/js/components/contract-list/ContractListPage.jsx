@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { getContracts } from "../../api/contractApi";
 import ContractList from "../contracts/ContractList";
 import ContractFilter from "./ContractFilter";
 import LoadingSpinner from "../common/LoadingSpinner";
@@ -12,16 +12,20 @@ const ContractListPage = () => {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        axios.get("/api/contracts")
-            .then(response => {
-                setContracts(response.data);
-                setFilteredContracts(response.data);
+        const fetchContracts = async () => {
+            try {
+                const contracts = await getContracts();
+                setContracts(contracts);
+                setFilteredContracts(contracts);
                 setLoading(false);
-            })
-            .catch(error => {
+            } catch (error) {
+                console.error("Error fetching contracts:", error);
                 setError("Failed to load contracts. Please try again.");
                 setLoading(false);
-            });
+            }
+        };
+
+        fetchContracts();
     }, []);
 
     const handleFilterChange = (filteredData) => {

@@ -4,50 +4,109 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Database\Eloquent\ModelNotFooundException;
+use Exception;
 
 class ClientController extends Controller
 {
-    public function index()
+    /**
+     * Display a listing of clients.
+     */
+    public function index(): JsonResponse
     {
-        \Log::info('Test log entry');
-        $clients = Client::all();
-        \Log::info('Clients data:', $clients->toArray());
-        
-        return response()->json($clients);
+        try {
+            $clients = Client::all();
+            return response()->json($clients);
+        } catch (Exception $e) {
+            Log::error('Error fetching clients: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to retrieve clients'], 500);
+        }
     }
 
-    public function store(Request $request)
+    /**
+     * Store a newly created client in storage.
+     */
+    public function store(Request $request): JsonResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:clients',
-            'phone' => 'required|string|max:20',
-        ]);
+        try {
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:clients,email',
+                'phone' => 'required|string|max:20',
+            ]);
 
-        $client = Client::create($request->all());
-        return response()->json(['success' => 'Client created successfully.', 'client' => $client], 201);
+            $client = Client::create($validatedData);
+
+            return response()->json(['message' => 'Client created successfully', 'client' => $client], 201);
+        } catch (ValidationException $e) {
+            return response()->json(['error' => $e->errors()], 422);
+        } catch (Exception $e) {
+            Log::error('Error creating client: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to create client'], 500);
+        }
     }
 
-    public function show(Client $client)
+    /**
+     * Display the specified client.
+     */
+    public function show($id): JsonResponse
     {
-        return response()->json($client);
+        try {
+            $client = Client::findOrFail($id);
+            return response()->json($client);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Client not found'], 404);
+        } catch (Exception $e) {
+            Log::error('Error fetching client: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to retrieve client'], 500);
+        }
     }
 
-    public function update(Request $request, Client $client)
+    /**
+     * Update the specified client in storage.
+     */
+    public function update(Request $request, $id): JsonResponse
     {
-        $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|string|email|max:255|unique:clients,email,' . $client->id,
-            'phone' => 'sometimes|required|string|max:20',
-        ]);
+        try {
+            $client = Client::findOrFail($id);
 
-        $client->update($request->all());
-        return response()->json(['success' => 'Client updated successfully.', 'client' => $client]);
+            $validatedData = $request->validate([
+                'name' => 'sometimes|required|string|max:255',
+                'email' => 'sometimes|required|email|unique:clients,email,' . $id,
+                'phone' => 'sometimes|required|string|max:20',
+            ]);
+
+            $client->update($validatedData);
+
+            return response()->json(['message' => 'Client updated successfully', 'client' => $client]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Client not found'], 404);
+        } catch (ValidationException $e) {
+            return response()->json(['error' => $e->errors()], 422);
+        } catch (Exception $e) {
+            Log::error('Error updating client: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to update client'], 500);
+        }
     }
 
-    public function destroy(Client $client)
+    /**
+     * Remove the specified client from storage.
+     */
+    public function destroy($id): JsonResponse
     {
-        $client->delete();
-        return response()->json(['success' => 'Client deleted successfully.']);
+        try {
+            $client = Client::findOrFail($id);
+            $client->delete();
+
+            return response()->json(['message' => 'Client deleted successfully']);
+        } catch (ModelNotFoundException $e) {
+            return response()->json(['error' => 'Client not found'], 404);
+        } catch (Exception $e) {
+            Log::error('Error deleting client: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to delete client'], 500);
+        }
     }
 }

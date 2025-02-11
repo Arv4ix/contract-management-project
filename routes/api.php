@@ -1,11 +1,10 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ContractController;
 
-// Group routes with API prefix
+// API Routes for Clients
 Route::prefix('clients')->group(function () {
     Route::get('/', [ClientController::class, 'index']); // Fetch all clients
     Route::post('/', [ClientController::class, 'store']); // Create new client
@@ -14,6 +13,7 @@ Route::prefix('clients')->group(function () {
     Route::delete('{id}', [ClientController::class, 'destroy']); // Delete client
 });
 
+// API Routes for Contracts
 Route::prefix('contracts')->group(function () {
     Route::get('/', [ContractController::class, 'index']); // Fetch all contracts
     Route::post('/', [ContractController::class, 'store']); // Create new contract

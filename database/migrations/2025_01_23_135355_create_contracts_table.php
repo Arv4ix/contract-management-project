@@ -13,13 +13,10 @@ return new class extends Migration
     {
         Schema::create('contracts', function (Blueprint $table) {
             $table->id(); // Primary key
-            $table->string('contract_number');
             $table->string('contract_name', 255); // Increased length for better naming
             $table->foreignId('client_id')->constrained()->onDelete('cascade'); // Foreign key referencing 'clients', cascade on delete
             $table->date('start_date'); // Contract start date 
-            $table->date('end_date')->nullable(); // Optional end date for contract tracking
-            $table->unsignedSmallInteger('duration'); // Duration in months, prevents negative values
-            $table->enum('status', ['active', 'expired', 'terminated'])->default('active'); // Track contract state
+            $table->string('duration'); // Duration in months, prevents negative values
             $table->text('comments')->nullable(); // Additional comments
             $table->timestamps(); // Created and updated timestamps
         });
