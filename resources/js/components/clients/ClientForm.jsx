@@ -1,19 +1,29 @@
 import React, { useState, useEffect } from "react";
-import { createClient, updateClient } from "../../api/clientApi";
+import { useNavigate, useParams } from "react-router-dom";
+import { createClient, updateClient, getClientById } from "../../api/clientApi";
 
-const ClientForm = ({ fetchClients, selectedClient, setSelectedClient }) => {
+const ClientForm = ({ fetchClients }) => {
+    const navigate = useNavigate();
+    const { id } = useParams(); 
     const [formData, setFormData] = useState({ name: "", email: "", phone: "" });
+    const [selectedClient, setSelectedClient] = useState(null);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        if (selectedClient) {
-            setFormData({ 
-                name: selectedClient.name, 
-                email: selectedClient.email, 
-                phone: selectedClient.phone 
-            });
+        if (id) {
+            const fetchClient = async () => {
+                try {
+                    const client = await getClientById(id);
+                    setFormData({ name: client.name, email: client.email, phone: client.phone });
+                    setSelectedClient(client);
+                } catch (error) {
+                    console.error("Error fetching client:", error);
+                    setError("Failed to load client details.");
+                }
+            };
+            fetchClient();
         }
-    }, [selectedClient]);
+    }, [id]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -21,15 +31,23 @@ const ClientForm = ({ fetchClients, selectedClient, setSelectedClient }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log("Submitting client data:", formData); // Debugging log
+
         try {
-            if (selectedClient) {
+            if (selectedClient && selectedClient.id) {
                 await updateClient(selectedClient.id, formData);
             } else {
-                await createClient( formData );
+                await createClient(formData);
             }
-            fetchClients();
+            if (fetchClients) {
+                fetchClients();
+            } else {
+                console.error("fetchClients is not defined");
+            }
+
             setFormData({ name: "", email: "", phone: "" });
             setSelectedClient(null);
+            navigate("/clients"); 
         } catch (error) {
             console.error("Error saving client:", error);
             setError("Failed to save client. Please try again.");
@@ -37,23 +55,26 @@ const ClientForm = ({ fetchClients, selectedClient, setSelectedClient }) => {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="mb-3">
-            <h3>{selectedClient ? "Edit Client" : "Add Client"}</h3>
+        <div className="container mt-4">
+            <h3>{id ? "Edit Client" : "Add Client"}</h3>
             {error && <div className="alert alert-danger">{error}</div>}
-            <div className="mb-2">
-                <label>Name:</label>
-                <input type="text" name="name" className="form-control" value={formData.name} onChange={handleChange} required />
-            </div>
-            <div className="mb-2">
-                <label>Email:</label>
-                <input type="email" name="email" className="form-control" value={formData.email} onChange={handleChange} required />
-            </div>
-            <div className="mb-2">
-                <label>Phone:</label>
-                <input type="text" name="phone" className="form-control" value={formData.phone} onChange={handleChange} required />
-            </div>
-            <button type="submit" className="btn btn-success">{selectedClient ? "Update" : "Add"} Client</button>
-        </form>
+            <form onSubmit={handleSubmit} className="mb-3">
+                <div className="mb-2">
+                    <label>Name:</label>
+                    <input type="text" name="name" className="form-control" value={formData.name} onChange={handleChange} required />
+                </div>
+                <div className="mb-2">
+                    <label>Email:</label>
+                    <input type="email" name="email" className="form-control" value={formData.email} onChange={handleChange} required />
+                </div>
+                <div className="mb-2">
+                    <label>Phone:</label>
+                    <input type="text" name="phone" className="form-control" value={formData.phone} onChange={handleChange} required />
+                </div>
+                <button type="submit" className="btn btn-success">{id ? "Update" : "Add"} Client</button>
+                <button type="button" className="btn btn-secondary ms-2" onClick={() => navigate("/clients")}>Cancel</button>
+            </form>
+        </div>
     );
 };
 

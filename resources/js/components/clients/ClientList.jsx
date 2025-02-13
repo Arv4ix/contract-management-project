@@ -1,14 +1,14 @@
 import React from "react";
 import ClientDetail from "./ClientDetail";
 
-const ClientList = ({ clients, onEdit, onDelete }) => {
-    // Ensure clients is always an array
-    const safeClients = Array.isArray(clients) ? clients : [];
+const ClientList = ({ clients = [], onEdit, onDelete }) => {
 
     return (
         <div>
             <h3>Client List</h3>
-            {safeClients.length === 0 ? <p>No clients available.</p> : (
+            {clients.length === 0 ? (
+                <p>No clients available</p>
+            ) : (
                 <table className="table table-striped">
                     <thead>
                         <tr>
@@ -19,8 +19,13 @@ const ClientList = ({ clients, onEdit, onDelete }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {safeClients.map(client => (
-                            <ClientDetail key={client.id} client={client} onEdit={onEdit} onDelete={onDelete} />
+                        {clients.map(client => (
+                            <ClientDetail 
+                                key={client.id} 
+                                client={client} 
+                                onEdit={() => onEdit(client.id)} 
+                                onDelete={() => onDelete(client.id)} 
+                            />
                         ))}
                     </tbody>
                 </table>

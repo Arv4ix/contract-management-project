@@ -91,6 +91,7 @@ body {
 
 // Table Styling
 table {
+    table-layout: auto;
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 1rem;
@@ -100,6 +101,9 @@ table th, table td {
     padding: 8px 12px;
     text-align: left;
     border: 1px solid #ddd;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 // Form Inputs

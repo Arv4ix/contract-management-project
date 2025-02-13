@@ -34,7 +34,7 @@ class ClientController extends Controller
         try {
             $validatedData = $request->validate([
                 'name' => 'required|string|max:255',
-                'email' => 'required|email|unique:clients,email',
+                'email' => 'required|email',
                 'phone' => 'required|string|max:20',
             ]);
 

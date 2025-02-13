@@ -4,7 +4,7 @@ const API_URL = "http://127.0.0.1:8000/api/clients"; // Base API endpoint
 
 // Common function to extract error messages
 const handleError = (error, defaultMessage) => {
-    console.error(error.response?.data || error.message); // Log the actual response error
+    console.error("API Error:", error.response?.data || error.message); // Debugging log
     throw new Error(error.response?.data?.message || defaultMessage);
 };
 
@@ -40,7 +40,7 @@ export const createClient = async (clientData) => {
         });
         return response.data;
     } catch (error) {
-        handleError(error, "Failed to create client.");
+        return handleError(error, "Failed to create client.");
     }
 };
 

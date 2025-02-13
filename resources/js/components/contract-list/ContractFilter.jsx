@@ -14,6 +14,7 @@ const ContractFilter = ({ onFilterChange }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        console.log("Filters applied:", filters); // Debugging
         onFilterChange(filters);
     };
 
