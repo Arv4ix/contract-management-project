@@ -64,11 +64,11 @@ class ContractController extends Controller
     {
         try {
             $validatedData = $request->validate([
-                'name' => 'sometimes|string|max:255',
+                'contract_name' => 'sometimes|string|max:255',
                 'client_id' => 'sometimes|exists:clients,id',
                 'start_date' => 'sometimes|date',
                 'duration' => 'sometimes|integer|min:1',
-                'comment' => 'nullable|string|max:500',
+                'comments' => 'nullable|string|max:500',
             ]);
 
             $contract = Contract::find($id);

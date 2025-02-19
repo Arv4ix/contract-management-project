@@ -50,12 +50,14 @@ const ContractsPage = () => {
 
     // Handle deleting contracts
     const handleDelete = async (contractId) => {
-        try {
-            await deleteContract(contractId);
-            fetchContracts();
-        } catch (error) {
-            console.error("Error deleting contract:", error);
-            setError("Failed to delete contract. Please try again.");
+        if (window.confirm("Are you sure you want to delete this contract?")) {
+            try {
+                await deleteContract(contractId);
+                fetchContracts();
+            } catch (error) {
+                console.error("Error deleting contract:", error);
+                setError("Failed to delete contract. Please try again.");
+            }
         }
     };
 

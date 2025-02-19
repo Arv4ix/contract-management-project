@@ -47,12 +47,14 @@ const ClientsPage = () => {
 
     // Handle deleting client
     const handleDelete = async (clientId) => {
-        try {
-            await deleteClient(clientId);
-            setClients(prevClients => prevClients.filter(client => client.id !== clientId));
-        } catch (error) {
-            console.error("Error deleting client:", error);
-            setError("Failed to delete client. Please try again.");
+        if (window.confirm("Are you sure you want to delete this client?")) {
+            try {
+                await deleteClient(clientId);
+                setClients(prevClients => prevClients.filter(client => client.id !== clientId));
+            } catch (error) {
+                console.error("Error deleting client:", error);
+                setError("Failed to delete client. Please try again.");
+            }
         }
     };
 

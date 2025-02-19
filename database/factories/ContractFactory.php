@@ -21,11 +21,11 @@ class ContractFactory extends Factory
     public function definition()
     {
         return [
-            'contract_name' => $this->faker->sentence(3),
+            'contract_name' => $this->faker->words(3, true),
             'client_id' => Client::factory(), // Ensures a client exists before creating a contract
             'start_date' => $this->faker->date(),
             'duration' => $this->faker->numberBetween(6, 36) . ' months',
-            'comments' => $this->faker->sentence(10),
+            'comments' => $this->faker->text(30),
             'created_at' => now(),
             'updated_at' => now(),
         ];

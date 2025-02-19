@@ -8,7 +8,7 @@ const ContractForm = ({ fetchContracts, selectedContract, setSelectedContract })
         contract_name: "",
         client_id: "",
         start_date: "",
-        duration: "",
+        duration: 1,
         comments: ""
     });
 
@@ -31,57 +31,69 @@ const ContractForm = ({ fetchContracts, selectedContract, setSelectedContract })
 
         fetchClientsData();
 
-        if (selectedContract || id) {
+        if (selectedContract) {
+            setFormData({
+                contract_name: selectedContract.contract_name || "",
+                client_id: selectedContract.client_id || "",
+                start_date: selectedContract.start_date || "",
+                duration: selectedContract.duration ? Number(selectedContract.duration) : 1,
+                comments: selectedContract.comments || ""
+            });
+        } else if (id && !selectedContract) {
             const fetchContract = async () => {
                 try {
-                    const response = selectedContract ? selectedContract : await getContractById(id);
+                    const response = await getContractById(id);
+                    if (!response) throw new Error("Invalid contract data received.");
+
                     setFormData({
                         contract_name: response.contract_name || "",
                         client_id: response.client_id || "",
                         start_date: response.start_date || "",
-                        duration: response.duration || "",
+                        duration: response.duration ? Number(response.duration) : 1,
                         comments: response.comments || ""
                     });
-                    setSelectedContract(response);
+
+                    if (setSelectedContract) {
+                        setSelectedContract(response);
+                    }
                 } catch (error) {
                     console.error("Error fetching contract:", error);
                     setError("Failed to load contract.");
                 }
             };
             fetchContract();
-        } else {
-            setFormData({ contract_name: "", client_id: "", start_date: "", duration: "", comments: "" });
         }
-    }, [selectedContract, id, setSelectedContract]);
+    }, [selectedContract, id]);
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+
+        setFormData({ 
+            ...formData, 
+            [name]: name === "duration" ? (isNaN(value) || value === "" ? 1 : Number(value)) : value
+        });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        console.log("Submitting Contract:", formData);
+        if (formData.duration < 1) {
+            setError("Duration must be at least 1 month.");
+            return;
+        }
         
         try {
-            if (selectedContract || id) {
-                await updateContract(selectedContract ? selectedContract.id : id, formData);
+            if (selectedContract?.id || id) {
+                await updateContract(selectedContract?.id || id, formData);
             } else {
                 await createContract(formData);
             }
 
-            if (fetchContracts) {
-                fetchContracts();
-            } else {
-                console.error("fetchContracts is not defined");
-            }
-
-            setFormData({ contract_name: "", client_id: "", start_date: "", duration: "", comments: "" });
+            fetchContracts?.();
+            setFormData({ contract_name: "", client_id: "", start_date: "", duration: 1, comments: "" });
 
             if (setSelectedContract) {
                 setSelectedContract(null);
-            } else {
-                console.error("setSelectedContract is not defined");
             }
 
             navigate("/contracts");
@@ -94,9 +106,9 @@ const ContractForm = ({ fetchContracts, selectedContract, setSelectedContract })
     const handleDelete = async () => {
         try {
             await deleteContract(selectedContract ? selectedContract.id : id);
-            fetchContracts();
+            fetchContracts?.();
             setFormData({ contract_name: "", client_id: "", start_date: "", duration:"", comments:"" });
-            setSelectedContract(null);
+            setSelectedContract?.(null);
             navigate("/contracts");
         } catch (error) {
             console.error("Error deleting contract:", error);

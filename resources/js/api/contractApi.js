@@ -12,10 +12,11 @@ const handleError = (error, defaultMessage) => {
 export const getContracts = async (filters = {}) => {
     try {
         const response = await axios.get(API_URL, { params: filters });
-        console.log("Filtered contracts response:", response.data); // Debugging
+        console.log("Fetched contracts:", response.data); // Debugging
         return response.data;
     } catch (error) {
-        return handleError(error, "Failed to fetch contracts.");
+        console.error("Error fetching contracts:", error);
+        return [];
     }
 };
 
@@ -49,6 +50,7 @@ export const updateContract = async (contractId, contractData) => {
         const response = await axios.put(`${API_URL}/${contractId}`, contractData, {
             headers: { Accept: "application/json", "Content-Type": "application/json" },
         });
+        console.log("Updaing contract:", contractData);
         return response.data;
     } catch (error) {
         return handleError(error, `Failed to update contract with ID: ${contractId}.`);
